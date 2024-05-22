@@ -4,6 +4,8 @@ from pathlib import Path
 from PIL import Image
 from PyPDF2 import PdfMerger
 
+from multiprocessing import Pool
+
 class Pi2pdf:
 
     def __init__(self, input_path, image_quality, image_dpi):
@@ -27,7 +29,8 @@ class Pi2pdf:
         print(folder_path + " のファイルを走査しました。")
         return image_files
 
-    def build_pdf(self, image_files, parent_folder_path, folder):
+    def build_pdf(self, args):
+        image_files, parent_folder_path, folder = args
         if not image_files:
             print(folder + "の画像ファイルが見つかりませんでした。")
             return
@@ -57,9 +60,15 @@ class Pi2pdf:
             if os.path.isdir(parent_folder_path + "/" + f):
                 subfolders.append(f)
 
-        for folder in subfolders:
-            image_files = self.get_image_files(parent_folder_path + "/" + folder)
-            self.build_pdf(image_files, parent_folder_path, folder)
+        pool = Pool()
+        args_list = [(self.get_image_files(parent_folder_path + "/" + folder), parent_folder_path, folder) for folder in subfolders]
+        pool.map(self.build_pdf, args_list)
+        pool.close()
+        pool.join()
+
+        # for folder in subfolders:
+        #     image_files = self.get_image_files(parent_folder_path + "/" + folder)
+        #     self.build_pdf(image_files, parent_folder_path, folder)
         
 def custom_input(prompt, default_value):
     user_input = input(prompt)
