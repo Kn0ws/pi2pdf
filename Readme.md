@@ -1,9 +1,9 @@
-誠意開発中！
-
 # PI2PDF
 
 PI2PDFは複数の画像を1つのPDFにまとめるスクリプトです。
 指定した親フォルダ内のサブフォルダ毎にまとめられた複数の画像が、サブフォルダ名.pdfという形で出力されます。
+
+Python3系
 
 ```bash
 git clone https://github.com/kn0ws/pi2pdf.git
