@@ -45,7 +45,12 @@ class Pi2pdf:
                 image = image.convert("RGB")
             
             pdf_path = image_file + ".pdf"
-            image.save(pdf_path, "PDF", quality=self.image_quality, dpi=[self.image_dpi, self.image_dpi])
+            image.save(
+                pdf_path,
+                "PDF",
+                quality=self.image_quality,
+                dpi=[self.image_dpi, self.image_dpi]
+            )
             pdf_merger.append(pdf_path)
             os.remove(pdf_path)  # 一時PDFを削除
         output_path = parent_folder_path + "/" + folder + ".pdf"
@@ -61,14 +66,14 @@ class Pi2pdf:
                 subfolders.append(f)
 
         pool = Pool()
-        args_list = [(self.get_image_files(parent_folder_path + "/" + folder), parent_folder_path, folder) for folder in subfolders]
+        args_list = [(
+            self.get_image_files(parent_folder_path + "/" + folder),
+            parent_folder_path,
+            folder
+        ) for folder in subfolders]
         pool.map(self.build_pdf, args_list)
         pool.close()
         pool.join()
-
-        # for folder in subfolders:
-        #     image_files = self.get_image_files(parent_folder_path + "/" + folder)
-        #     self.build_pdf(image_files, parent_folder_path, folder)
         
 def custom_input(prompt, default_value):
     user_input = input(prompt)
@@ -81,20 +86,19 @@ def restart_program():
     os.execl(python, python, *sys.argv)
 
 if __name__ == "__main__":
-    args = sys.argv
-    input_path = input("PDFに変換するフォルダ郡の親フォルダのパスを入力: ")
+    input_path = input("1. PDFに変換するフォルダ郡の親フォルダのパスを入力: ")
     if not input_path:
         print("※! パスを入力してください。")
         restart_program()
     
     print("画像の圧縮品質を指定します。\n数値が低い程圧縮品質が高くなり、ファイルサイズは小さくなります。圧縮品質が高いほど、画質は低くなります。\nデフォルトは100（非圧縮）です。")
-    image_quality = int(custom_input("圧縮品質(100~1): ", 100))
+    image_quality = int(custom_input("2. 圧縮品質(100~1): ", 100))
 
     if image_quality < 1 or image_quality > 100:
         raise ValueError("圧縮品質は100~1の間で入力してください。")
 
     print("印刷解像度(DPI)を指定します。\nこれは、主にプリンター等での印刷時に使用される解像度です。解像度が低い程、ファイルサイズは小さくなります。\nデフォルト値は72(Web用)です。印刷を予定している場合は、300以上が推奨です。")
-    image_dpi = custom_input("DPI値: ", 72)
+    image_dpi = custom_input("3. DPI値: ", 72)
 
     pi2pdf = Pi2pdf(input_path, image_quality, float(image_dpi))
     pi2pdf.make()
