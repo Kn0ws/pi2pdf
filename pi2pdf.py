@@ -3,12 +3,13 @@ import sys
 from pathlib import Path
 from PIL import Image
 from PyPDF2 import PdfMerger
-
 from multiprocessing import Pool
+import rename
 
 class Pi2pdf:
 
-    def __init__(self, input_path, image_quality, image_dpi):
+    def __init__(self, is_rename, input_path, image_quality, image_dpi):
+        self.is_rename = is_rename
         self.input_path = input_path
         self.image_quality = image_quality
         self.image_dpi = image_dpi
@@ -61,7 +62,10 @@ class Pi2pdf:
     def make(self):
         parent_folder_path = self.remove_trailing_slash(self.input_path)
         subfolders = []
-        for f in os.listdir(parent_folder_path):
+        dirs = [file for file in os.listdir(parent_folder_path) if not file.startswith('.')]
+        for f in dirs:
+            if self.is_rename:
+                rename.FileRenamer(parent_folder_path + "/" + f).rename_files()
             if os.path.isdir(parent_folder_path + "/" + f):
                 subfolders.append(f)
 
@@ -86,10 +90,21 @@ def restart_program():
     os.execl(python, python, *sys.argv)
 
 if __name__ == "__main__":
-    input_path = input("1. PDFに変換するフォルダ郡の親フォルダのパスを入力: ")
+    
+        
+    input_path = input("PDFに変換するフォルダ郡の親フォルダのパスを入力: ")
     if not input_path:
         print("※! パスを入力してください。")
         restart_program()
+
+    print("指定した親フォルダ内のフォルダのファイル名を5桁の数字に変更できます。\n「ファイル名_1.jpg」等を「00001.jpg」に変更することで、PDFを生成する際の並び順が正確になります。\n直接ファイル名を変更する為、ファイル名を変更しても問題の無いフォルダの場合に実行してください。")
+    exec_rename = input("ファイル名を変更しますか？ Yes: y, No: n またはy以外のキーを入力してください。: ")
+    if exec_rename.lower() == 'y':
+        is_rename = True
+    else:
+        is_rename = False
+    
+
     
     print("画像の圧縮品質を指定します。\n数値が低い程圧縮品質が高くなり、ファイルサイズは小さくなります。圧縮品質が高いほど、画質は低くなります。\nデフォルトは100（非圧縮）です。")
     image_quality = int(custom_input("2. 圧縮品質(100~1): ", 100))
@@ -100,5 +115,5 @@ if __name__ == "__main__":
     print("印刷解像度(DPI)を指定します。\nこれは、主にプリンター等での印刷時に使用される解像度です。解像度が低い程、ファイルサイズは小さくなります。\nデフォルト値は72(Web用)です。印刷を予定している場合は、300以上が推奨です。")
     image_dpi = custom_input("3. DPI値: ", 72)
 
-    pi2pdf = Pi2pdf(input_path, image_quality, float(image_dpi))
+    pi2pdf = Pi2pdf(is_rename, input_path, image_quality, float(image_dpi))
     pi2pdf.make()
