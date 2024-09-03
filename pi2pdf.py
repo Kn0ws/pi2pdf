@@ -18,15 +18,78 @@ class Pi2pdf:
         if(path.endswith('/')):
             return path[:-1]
         return path
+    
+    def split_image_if_wide(self, image_path):
+        # 画像を開く
+        with Image.open(image_path) as img:
+            width, height = img.size
+            
+            # 縦横比を測定
+            if width > height:
+                # 横長の場合、画像を縦半分に分割
+                left_half = img.crop((0, 0, width // 2, height))
+                right_half = img.crop((width // 2, 0, width, height))
+                
+                # 元のファイル名と拡張子を取得
+                base_name, ext = os.path.splitext(image_path)
+                
+                # 新しいファイル名を作成
+                left_half_path = f"{base_name}b{ext}"
+                right_half_path = f"{base_name}a{ext}"
+                
+                # 分割した画像を保存
+                left_half.save(left_half_path)
+                right_half.save(right_half_path)
+
+                # 元のファイルを削除
+                os.remove(image_path)
+                
+                print(f"画像を分割しました: {left_half_path}, {right_half_path}")
+            else:
+                print(f"画像は縦長または正方形です: {image_path}")
 
     def get_image_files(self, folder_path):
 
         image_files = []
         print(folder_path + " のファイルを走査しています。しばらくお待ち下さい。")
+        
+
         for root, _, files in os.walk(folder_path):
             for file in files:
                 if file.lower().endswith(('.png','jpg', 'jpeg')):
-                    image_files.append(os.path.join(root, file))
+                    image_path = os.path.join(root, file)
+                    # 画像を開く
+                    with Image.open(image_path) as img:
+                        width, height = img.size
+                        
+                        # 縦横比を測定
+                        if width > height:
+                            # 横長の場合、画像を縦半分に分割
+                            left_half = img.crop((0, 0, width // 2, height))
+                            right_half = img.crop((width // 2, 0, width, height))
+                            
+                            # 元のファイル名と拡張子を取得
+                            base_name, ext = os.path.splitext(image_path)
+                            
+                            # 新しいファイル名を作成
+                            left_half_path = f"{base_name}b{ext}"
+                            right_half_path = f"{base_name}a{ext}"
+                            
+                            # 分割した画像を保存
+                            left_half.save(left_half_path)
+                            right_half.save(right_half_path)
+
+                            # 元のファイルを削除
+                            os.remove(image_path)
+                            
+                            print(f"画像を分割しました: {left_half_path}, {right_half_path}")
+                            image_files.append(left_half_path)
+                            image_files.append(right_half_path)
+                        else:
+                            print(f"画像は縦長または正方形です: {image_path}")
+                            image_files.append(image_path)
+
+                    # image_files.append(os.path.join(root, file))
         print(folder_path + " のファイルを走査しました。")
         return image_files
 
